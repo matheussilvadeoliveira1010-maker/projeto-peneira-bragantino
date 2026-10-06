@@ -24,4 +24,4 @@ Cada aviso possui controle diário para evitar spam.
 Um PWA local/estático não consegue garantir notificações agendadas quando o app está totalmente fechado apenas com JavaScript.
 Para notificações realmente automáticas em horários definidos mesmo com o app fechado, é necessário Web Push + um backend/serviço de push.
 
-O Service Worker já está preparado para receber Web Push.
+O Service Worker já está preparado para receber Web Push. 
