@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Projeto Peneira Bragantino — Treino</title>
+<style>
+*{box-sizing:border-box} body{margin:0;background:#090b0e;color:#f4f5f7;font-family:Inter,Arial,sans-serif}
+.wrap{max-width:1000px;margin:auto;padding:18px}
+.hero,.card{background:#13161b;border:1px solid #292e36;border-radius:20px;padding:20px;margin-bottom:16px}
+.hero{background:linear-gradient(135deg,#171a20,#101216)}
+h1{margin:0 0 6px;font-size:28px}.sub,.small{color:#aeb5bf}.count{font-size:44px;font-weight:900;margin:12px 0}.red{color:#e31e2d}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.stat{background:#0d1014;border:1px solid #252a31;border-radius:14px;padding:14px}
+.stat b{font-size:24px}.bar{height:10px;background:#292e36;border-radius:99px;overflow:hidden;margin-top:14px}.fill{height:100%;width:0;background:#e31e2d}
+.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:14px}.tabs button{white-space:nowrap}
+button{border:0;border-radius:10px;padding:10px 13px;background:#262b33;color:#fff;font-weight:700;cursor:pointer}.active{background:#e31e2d}
+.day{background:#0d1014;border:1px solid #252a31;border-radius:14px;padding:14px;margin:8px 0}
+.day.today{border-color:#e31e2d}.dayhead{display:flex;justify-content:space-between;gap:10px}.tag{font-size:12px;padding:5px 8px;border-radius:8px;background:#262b33}
+ul{padding-left:20px}.check{display:block;padding:9px 0;border-bottom:1px solid #252a31}.check input{transform:scale(1.2);margin-right:9px}
+details{margin-top:10px;background:#111419;border-radius:12px;padding:10px}summary{cursor:pointer;font-weight:800}
+.note{padding:12px;background:#101318;border-radius:12px;color:#cbd0d8;margin-top:10px}
+@media(max-width:600px){.hero,.card{padding:16px}.count{font-size:36px}}
+</style>
+
+<style>
+.calendar-status{margin-top:6px;font-weight:700;opacity:.8}
+.day.today{outline:2px solid #55d96a;transform:translateY(-1px)}
+</style>
+
+<style>
+.mood-pop{animation:moodPop .35s ease}
+@keyframes moodPop{0%{transform:scale(.8)}70%{transform:scale(1.12)}100%{transform:scale(1)}}
+</style>
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#050607">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Peneira BRB">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body><div class="wrap">
+
+<section class="hero">
+<h1>🔴 Projeto Peneira Bragantino</h1>
+<div class="sub">Preparação para 20/10/2026 • Realengo • Sub-13 • nascido em 2013</div>
+<div class="count" id="count">--</div>
+<div class="small">Objetivo: chegar rápido, técnico, confiante e descansado.</div>
+</section>
+
+<section class="card">
+<h2>📊 Meu progresso</h2>
+<div class="grid">
+<div class="stat">⚽ Futebol<br><b id="fut">0</b> sessões</div>
+<div class="stat">🏋️ Academia<br><b id="gym">0</b> sessões</div>
+<div class="stat">📚 Estudos<br><b id="study">0</b> sessões</div>
+<div class="stat">😴 Recuperação<br><b id="rest">0</b> dias</div>
+</div>
+<div class="bar"><div class="fill" id="fill"></div></div>
+<p class="small" id="pct">0% do checklist de hoje</p>
+</section>
+
+<section class="card">
+<h2>🎮 Sistema de Pontos</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:center">
+  <div>
+    <div id="avatar" style="font-size:70px;text-align:center;line-height:1">⚽🙂</div>
+    <div id="mood" style="text-align:center;font-weight:800;font-size:18px">Começando a jornada</div>
+  </div>
+  <div>
+    <div style="font-size:34px;font-weight:900"><span id="points">0</span> XP</div>
+    <div class="small" id="level">Nível 1 — Começo</div>
+    <div class="bar"><div class="fill" id="xpFill"></div></div>
+    <div class="small" id="next">Próximo nível: 100 XP</div>
+  </div>
+</div>
+<div class="note">Cada checklist concluído dá <b>10 XP</b>. Treinos completos dão bônus. Quanto mais você treina e cuida da recuperação, mais feliz fica o boneco. 😄</div>
+</section>
+
+<section class="card">
+<h2>📅 Calendário completo</h2>
+<div class="tabs">
+<button class="active" onclick="showAll()">Todos</button>
+<button onclick="filterType('⚽')">⚽ Futebol</button>
+<button onclick="filterType('🏋️')">🏋️ Academia</button>
+<button onclick="filterType('📚')">📚 Estudos/descanso</button>
+</div>
+<div id="calendar"></div>
+</section>
+
+<section class="card">
+<h2>✅ Checklist de hoje</h2>
+<label class="check"><input type="checkbox" data-key="study">📚 Estudar / revisar matérias</label>
+<label class="check"><input type="checkbox" data-key="warm">🔥 Fazer aquecimento</label>
+<label class="check"><input type="checkbox" data-key="main">⚽ Fazer o treino planejado</label>
+<label class="check"><input type="checkbox" data-key="cool">🧘 Volta à calma / alongamento leve</label>
+<label class="check"><input type="checkbox" data-key="water">💧 Hidratação ao longo do dia</label>
+<label class="check"><input type="checkbox" data-key="sleep">😴 Dormir bem</label>
+</section>
+
+<section class="card">
+<h2>⚽ Treinos — checklist completo</h2>
+<p class="small">Marque cada exercício conforme terminar. Não precisa fazer tudo se estiver cansado por causa das provas.</p>
+
+<details open>
+<summary>🟢 TREINO A — Domínio + Passe + Finalização</summary>
+<div class="note">Objetivo: primeiro toque, passe e finalização.</div>
+<label class="check"><input type="checkbox" class="exercise">🔥 Aquecimento com bola — 8 min</label>
+<label class="check"><input type="checkbox" class="exercise">⚽ Condução com os dois pés — 10 min</label>
+<label class="check"><input type="checkbox" class="exercise">🎯 Domínio orientado — 3×8 cada lado</label>
+<label class="check"><input type="checkbox" class="exercise">↔️ Passe na parede — 3×20 cada pé</label>
+<label class="check"><input type="checkbox" class="exercise">🔄 Recebe, gira e conduz — 3×8</label>
+<label class="check"><input type="checkbox" class="exercise">🥅 Finalização — 4×5</label>
+<label class="check"><input type="checkbox" class="exercise">🧘 Volta à calma — 5 min</label>
+</details>
+
+<details>
+<summary>🔵 TREINO B — Drible + 1×1 + Mudança de direção</summary>
+<div class="note">Objetivo: ganhar confiança no 1×1 e mudar de direção rápido.</div>
+<label class="check"><input type="checkbox" class="exercise">🔥 Aquecimento — 8 min</label>
+<label class="check"><input type="checkbox" class="exercise">⚽ Slalom/condução — 4 voltas</label>
+<label class="check"><input type="checkbox" class="exercise">↪️ Mudança de direção — 4×20 s</label>
+<label class="check"><input type="checkbox" class="exercise">✨ Fintas — 3×5 cada lado</label>
+<label class="check"><input type="checkbox" class="exercise">⚔️ 1×1/duelo com parceiro — 10–15 min</label>
+<label class="check"><input type="checkbox" class="exercise">🥅 Finalização após condução — 3×5</label>
+<label class="check"><input type="checkbox" class="exercise">🧘 Volta à calma — 5 min</label>
+</details>
+
+<details>
+<summary>🟠 TREINO C — Jogo + Intensidade moderada</summary>
+<div class="note">Objetivo: tomar decisões rápidas e jogar simples.</div>
+<label class="check"><input type="checkbox" class="exercise">🔥 Aquecimento — 8 min</label>
+<label class="check"><input type="checkbox" class="exercise">🎯 Domínio orientado — 5 min</label>
+<label class="check"><input type="checkbox" class="exercise">↔️ Passe rápido — 10 min</label>
+<label class="check"><input type="checkbox" class="exercise">🥅 Finalizações — 10 min</label>
+<label class="check"><input type="checkbox" class="exercise">⚽ Jogo reduzido/quadra — 20–30 min</label>
+<label class="check"><input type="checkbox" class="exercise">🧘 Volta à calma — 5 min</label>
+</details>
+
+<details>
+<summary>🟣 TREINO D — Academia: Força para futebol</summary>
+<div class="note">Objetivo: força e estabilidade. Carga leve/moderada, técnica perfeita e professor acompanhando.</div>
+<label class="check"><input type="checkbox" class="exercise">🔥 Aquecimento — bicicleta/esteira 5–10 min</label>
+<label class="check"><input type="checkbox" class="exercise">🏋️ Agachamento goblet — 3×10</label>
+<label class="check"><input type="checkbox" class="exercise">🦵 Leg press — 3×10</label>
+<label class="check"><input type="checkbox" class="exercise">🦿 Afundo — 2×8 cada perna</label>
+<label class="check"><input type="checkbox" class="exercise">🦵 Mesa flexora — 2×10</label>
+<label class="check"><input type="checkbox" class="exercise">🍑 Hip thrust — 3×10</label>
+<label class="check"><input type="checkbox" class="exercise">🦶 Panturrilha — 3×12</label>
+<label class="check"><input type="checkbox" class="exercise">🧱 Prancha — 3×20–30 s</label>
+<label class="check"><input type="checkbox" class="exercise">🧘 Volta à calma — 5 min</label>
+</details>
+
+<details>
+<summary>🟡 TREINO E — Ativação pré-peneira</summary>
+<div class="note">Objetivo: acordar o corpo sem cansar. É leve.</div>
+<label class="check"><input type="checkbox" class="exercise">🔥 Mobilidade/aquecimento — 5 min</label>
+<label class="check"><input type="checkbox" class="exercise">⚽ Condução com bola — 5 min</label>
+<label class="check"><input type="checkbox" class="exercise">↔️ Passes — 5 min</label>
+<label class="check"><input type="checkbox" class="exercise">🥅 Finalizações leves — 5–10 min</label>
+<label class="check"><input type="checkbox" class="exercise">⚡ 2–3 acelerações curtas, sem máximo esforço</label>
+<label class="check"><input type="checkbox" class="exercise">😴 Encerrar cedo e descansar</label>
+</details>
+
+<div class="note">
+<b>📊 Progresso dos exercícios:</b> <span id="exerciseProgress">0/0</span>
+<div class="bar"><div class="fill" id="exerciseFill"></div></div>
+</div>
+</section>
+
+</section>
+
+<section class="card">
+<h2>🎒 Checklist da peneira</h2>
+<label class="check"><input type="checkbox" data-key="form">📝 Formulário de avaliação impresso</label>
+<label class="check"><input type="checkbox" data-key="medical">🩺 Atestado/declaração médica exigida</label>
+<label class="check"><input type="checkbox" data-key="docs">🪪 Documentos pessoais</label>
+<label class="check"><input type="checkbox" data-key="email">📧 Conferir e-mail de confirmação e itens solicitados</label>
+<label class="check"><input type="checkbox" data-key="kit">👕 Separar roupa/equipamento na véspera</label>
+</section>
+
+<section class="card">
+<h2>🧠 Regras do projeto</h2>
+<p>• Durante semana de provas: escola e estudos continuam prioridade.</p>
+<p>• Se estiver muito cansado ou com dor, reduza/pare e avise um responsável.</p>
+<p>• Não precisa treinar pesado todos os dias.</p>
+<p>• 19/10: ativação leve. 20/10: peneira. 🔴⚽</p>
+<button onclick="resetAll()">Zerar checklists</button>
+</section>
+
+</div>
+<script>
+const start = new Date("2026-10-05T00:00:00");
+const target = new Date("2026-10-20T00:00:00");
+
+const plans = [
+["05/10","⚽","Treino A — Domínio + Passe + Finalização"],
+["06/10","🏋️","Treino D — Academia: Força para futebol"],
+["07/10","📚","Estudos + recuperação"],
+["08/10","⚽","Treino B — Drible + 1×1 + Mudança de direção"],
+["09/10","🏋️","Treino D — Academia: Força para futebol"],
+["10/10","⚽","Treino C — Jogo + Intensidade moderada"],
+["11/10","📚","Descanso + recuperação"],
+["12/10","⚽","Treino A — Domínio + Passe + Finalização"],
+["13/10","🏋️","Treino D — Academia: Força para futebol"],
+["14/10","📚","Estudos + recuperação"],
+["15/10","⚽","Treino B — Drible + 1×1 + Mudança de direção"],
+["16/10","🏋️","Treino D — Última academia de força"],
+["17/10","⚽","Treino C — Jogo + Intensidade moderada"],
+["18/10","📚","Descanso completo"],
+["19/10","⚽","Treino E — Ativação pré-peneira"],
+["20/10","🔴","PENEIRA — RED BULL BRAGANTINO"]
+];
+
+const cal = document.getElementById("calendar");
+
+function render(filter="all") {
+  cal.innerHTML = "";
+  plans.forEach((p) => {
+    if (filter !== "all" && p[1] !== filter) return;
+    const d = document.createElement("div");
+    d.className = "day";
+    d.dataset.date = p[0];
+    d.innerHTML = `
+      <div class="dayhead">
+        <b>${p[0]}</b>
+        <span class="tag">${p[1]}</span>
+      </div>
+      <div style="margin-top:7px">${p[2]}</div>
+      <div class="small calendar-status">⏳ Planejado</div>`;
+    cal.appendChild(d);
+  });
+  updateCalendar();
+}
+function showAll(){ render("all"); }
+function filterType(x){ render(x); }
+
+function updateCountdown() {
+  const now = new Date();
+  const diff = Math.ceil((target - now) / 86400000);
+  document.getElementById("count").textContent =
+    diff > 0 ? diff + " dias" : diff === 0 ? "É HOJE! 🔥" : "Peneira realizada";
+}
+updateCountdown();
+setInterval(updateCountdown, 60000);
+
+const boxes = [...document.querySelectorAll('input[type="checkbox"]:not(.exercise)')];
+const exerciseBoxes = [...document.querySelectorAll(".exercise")];
+
+function safeKey(prefix, box, index) {
+  if (box.dataset.key) return prefix + box.dataset.key;
+  return prefix + index;
+}
+
+function loadCheckboxes() {
+  boxes.forEach((b,i) => {
+    b.checked = localStorage.getItem(safeKey("brag_", b, i)) === "1";
+  });
+  exerciseBoxes.forEach((b,i) => {
+    b.checked = localStorage.getItem("exercise_" + i) === "1";
+  });
+}
+
+function saveCheckbox(box, index, isExercise) {
+  const key = isExercise ? "exercise_" + index : safeKey("brag_", box, index);
+  localStorage.setItem(key, box.checked ? "1" : "0");
+}
+
+function pulseMessage(message) {
+  let toast = document.getElementById("smartToast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "smartToast";
+    toast.style.cssText = `
+      position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
+      background:#111;color:#fff;padding:12px 18px;border-radius:14px;
+      font-weight:800;z-index:9999;box-shadow:0 8px 30px #0006;
+      transition:.25s;`;
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.style.opacity = "1";
+  clearTimeout(window.toastTimer);
+  window.toastTimer = setTimeout(() => toast.style.opacity = "0", 1400);
+}
+
+function getXP() {
+  const normalXP = boxes.filter(b => b.checked).length * 10;
+  const exerciseXP = exerciseBoxes.filter(b => b.checked).length * 5;
+  return normalXP + exerciseXP;
+}
+
+function updateExercises() {
+  const done = exerciseBoxes.filter(x => x.checked).length;
+  const total = exerciseBoxes.length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+
+  document.getElementById("exerciseProgress").textContent = `${done}/${total}`;
+  document.getElementById("exerciseFill").style.width = pct + "%";
+}
+
+function updateProgress() {
+  const done = boxes.filter(x => x.checked).length;
+  const total = boxes.length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+
+  document.getElementById("pct").textContent =
+    `${pct}% do checklist concluído • ${done}/${total} itens`;
+
+  document.getElementById("fill").style.width = pct + "%";
+
+  const key = k => boxes.filter(x => x.dataset.key === k && x.checked).length;
+  document.getElementById("study").textContent = key("study");
+
+  const footballKeys = ["warm","main","cool"];
+  document.getElementById("fut").textContent =
+    footballKeys.filter(k => key(k)).length;
+
+  const gymExerciseCount = exerciseBoxes.filter((x) =>
+    x.parentElement.closest("details")?.querySelector("summary")?.textContent.includes("TREINO D") &&
+    x.checked
+  ).length;
+  document.getElementById("gym").textContent = gymExerciseCount;
+
+  document.getElementById("rest").textContent = key("sleep");
+
+  updateSmartSummary(done, total, pct);
+}
+
+function updateSmartSummary(done, total, pct) {
+  let el = document.getElementById("smartSummary");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "smartSummary";
+    el.className = "note";
+    const progressCard = document.getElementById("fill").closest(".card");
+    progressCard.appendChild(el);
+  }
+
+  let msg;
+  if (pct === 0) msg = "🚀 Comece pelo primeiro item. Cada check conta!";
+  else if (pct < 40) msg = "🔥 Bom começo! Continue e aumente seu ritmo.";
+  else if (pct < 70) msg = "😄 Tá evoluindo! Mais alguns checks e você fecha o dia.";
+  else if (pct < 100) msg = "🤩 Quase completo! Não esqueça da recuperação.";
+  else msg = "🏆 CHECKLIST COMPLETO! Dia concluído. Descansa e mantém o foco.";
+
+  el.innerHTML = `<b>🤖 Assistente:</b> ${msg}`;
+}
+
+function updateGame() {
+  const xp = getXP();
+  const level = Math.floor(xp / 100) + 1;
+  const inLevel = xp % 100;
+  const nextXP = 100 - inLevel;
+
+  let avatar = "⚽😢", mood = "Tá parado... bora começar!";
+  if (xp >= 1)   { avatar = "⚽😕"; mood = "Começou! Já valeu o primeiro check."; }
+  if (xp >= 50)  { avatar = "⚽🙂"; mood = "Tá melhorando! Continua."; }
+  if (xp >= 100) { avatar = "⚽😄"; mood = "Mandou bem!"; }
+  if (xp >= 250) { avatar = "⚽😁"; mood = "Craque em evolução!"; }
+  if (xp >= 500) { avatar = "⚽🤩"; mood = "Modo peneira ON!"; }
+  if (xp >= 800) { avatar = "⚽🔥"; mood = "FOCO TOTAL!"; }
+  if (xp >= 1200){ avatar = "⚽👑"; mood = "NÍVEL CRAQUE!"; }
+
+  document.getElementById("points").textContent = xp;
+  document.getElementById("level").textContent = `Nível ${level}`;
+  document.getElementById("xpFill").style.width = inLevel + "%";
+  document.getElementById("next").textContent =
+    xp > 0 && inLevel === 0 ? "Nível completo! 🚀" : `${nextXP} XP para o próximo nível`;
+  const avatarEl = document.getElementById("avatar");
+  const moodEl = document.getElementById("mood");
+  avatarEl.textContent = avatar;
+  moodEl.textContent = mood;
+  avatarEl.classList.remove("mood-pop");
+  void avatarEl.offsetWidth;
+  avatarEl.classList.add("mood-pop");
+
+  updateCalendar();
+}
+
+function updateCalendar() {
+  const today = new Date();
+  const todayKey = String(today.getDate()).padStart(2,"0") + "/" +
+                   String(today.getMonth()+1).padStart(2,"0");
+
+  document.querySelectorAll("#calendar .day").forEach(day => {
+    const date = day.dataset.date;
+    const status = day.querySelector(".calendar-status");
+    const plan = plans.find(p => p[0] === date);
+    const isToday = date === todayKey;
+
+    day.classList.toggle("today", isToday);
+
+    if (date < todayKey) {
+      status.textContent = "📌 Data passada";
+    } else if (isToday) {
+      status.textContent = "🔥 HOJE — foco no treino!";
+    } else if (plan && plan[1] === "🔴") {
+      status.textContent = "🏆 DIA DA PENEIRA";
+    } else {
+      status.textContent = "⏳ Planejado";
+    }
+  });
+}
+
+function onChecklistChange(box, index, isExercise) {
+  saveCheckbox(box, index, isExercise);
+
+  updateProgress();
+  updateExercises();
+  updateGame();
+
+  if (box.checked) {
+    const xp = isExercise ? 5 : 10;
+    pulseMessage(`+${xp} XP! ${getXP()} XP no total ⚽🔥`);
+  } else {
+    pulseMessage("Check desmarcado. Progresso atualizado.");
+  }
+}
+
+loadCheckboxes();
+
+boxes.forEach((b,i) => {
+  b.addEventListener("change", () => onChecklistChange(b,i,false));
+});
+
+exerciseBoxes.forEach((b,i) => {
+  b.addEventListener("change", () => onChecklistChange(b,i,true));
+});
+
+function resetAll() {
+  if (!confirm("Tem certeza que quer zerar todo o progresso?")) return;
+
+  boxes.forEach((b,i) => {
+    b.checked = false;
+    localStorage.removeItem(safeKey("brag_", b, i));
+  });
+
+  exerciseBoxes.forEach((b,i) => {
+    b.checked = false;
+    localStorage.removeItem("exercise_" + i);
+  });
+
+  updateProgress();
+  updateExercises();
+  updateGame();
+  pulseMessage("🔄 Progresso zerado!");
+}
+
+render();
+updateProgress();
+updateExercises();
+updateGame();
+</script>
+
+<section class="card" id="pwaCard" style="margin-top:18px">
+  <h2>🔔 Notificações inteligentes</h2>
+  <p id="notifStatus">Ative para receber avisos do projeto.</p>
+  <button id="enableNotifications" class="primary">🔔 Ativar notificações</button>
+  <button id="testNotification" style="margin-left:8px">🧪 Testar notificação</button>
+  <p class="small" style="margin-top:10px">
+    No iPhone, primeiro adicione o painel à Tela de Início pelo Safari.
+  </p>
+</section>
+
+<script>
+(function(){
+  const status = document.getElementById('notifStatus');
+  const enable = document.getElementById('enableNotifications');
+  const test = document.getElementById('testNotification');
+
+  async function registerSW(){
+    if (!('serviceWorker' in navigator)) return null;
+    try { return await navigator.serviceWorker.register('./sw.js'); }
+    catch(e){ console.warn('SW:', e); return null; }
+  }
+
+  function updateStatus(){
+    if (!('Notification' in window)) {
+      status.textContent = '⚠️ Este navegador não oferece notificações.';
+      return;
+    }
+    if (Notification.permission === 'granted') {
+      status.textContent = '🟢 Notificações ativadas!';
+      enable.textContent = '✅ Notificações ativas';
+    } else if (Notification.permission === 'denied') {
+      status.textContent = '🔕 Bloqueadas. Ative nas configurações do navegador/app.';
+    } else {
+      status.textContent = '⚪ Ainda não ativadas.';
+    }
+  }
+
+  enable?.addEventListener('click', async ()=>{
+    await registerSW();
+    if (!('Notification' in window)) return;
+    const p = await Notification.requestPermission();
+    updateStatus();
+    if (p === 'granted') {
+      const reg = await navigator.serviceWorker.ready;
+      if (reg.showNotification) {
+        reg.showNotification('⚽ Projeto Peneira Bragantino', {
+          body:'Notificações ativadas! Vou te ajudar a manter o foco.',
+          icon:'icons/icon-192.png',
+          badge:'icons/icon-192.png',
+          tag:'welcome'
+        });
+      }
+    }
+  });
+
+  test?.addEventListener('click', async ()=>{
+    const reg = await navigator.serviceWorker.ready;
+    if (Notification.permission !== 'granted') {
+      status.textContent = '⚠️ Ative as notificações primeiro.';
+      return;
+    }
+    reg.showNotification('🔥 Teste do Projeto Peneira', {
+      body:'Funcionou! Seu painel já pode exibir notificações.',
+      icon:'icons/icon-192.png',
+      badge:'icons/icon-192.png',
+      tag:'test'
+    });
+  });
+
+  registerSW().then(updateStatus);
+})();
+</script>
+
+<script>
+/* ===== NOTIFICAÇÕES INTELIGENTES =====
+   O navegador/SO decide quando pode entregar a notificação.
+   Este módulo agenda lembretes enquanto o app/PWA estiver ativo e
+   prepara mensagens para Web Push quando houver backend conectado.
+*/
+(function(){
+  const plans = {
+    "05/10":"⚽ Hoje: Treino A — Domínio + Passe + Finalização",
+    "06/10":"🏋️ Hoje: Treino D — Academia: Força para futebol",
+    "07/10":"📚 Hoje: Estudos + recuperação",
+    "08/10":"⚽ Hoje: Treino B — Drible + 1×1 + Mudança de direção",
+    "09/10":"🏋️ Hoje: Treino D — Academia: Força para futebol",
+    "10/10":"⚽ Hoje: Treino C — Jogo + Intensidade moderada",
+    "11/10":"📚 Hoje: Descanso + recuperação",
+    "12/10":"⚽ Hoje: Treino A — Domínio + Passe + Finalização",
+    "13/10":"🏋️ Hoje: Treino D — Academia: Força para futebol",
+    "14/10":"📚 Hoje: Estudos + recuperação",
+    "15/10":"⚽ Hoje: Treino B — Drible + 1×1 + Mudança de direção",
+    "16/10":"🏋️ Hoje: Treino D — Última academia de força",
+    "17/10":"⚽ Hoje: Treino C — Jogo + Intensidade moderada",
+    "18/10":"📚 Hoje: Descanso completo",
+    "19/10":"🚨 AMANHÃ É A PENEIRA! — Ativação pré-peneira",
+    "20/10":"🔴 É HOJE! PENEIRA RED BULL BRAGANTINO!"
+  };
+
+  function todayKey(d=new Date()){
+    return String(d.getDate()).padStart(2,'0') + "/" + String(d.getMonth()+1).padStart(2,'0');
+  }
+
+  function daysUntilTryout(){
+    const now = new Date();
+    const target = new Date("2026-10-20T00:00:00");
+    return Math.ceil((target-now)/86400000);
+  }
+
+  function isGranted(){
+    return 'Notification' in window && Notification.permission === 'granted';
+  }
+
+  function notification(title, body, tag){
+    if (!isGranted()) return false;
+    navigator.serviceWorker.ready.then(reg => {
+      reg.showNotification(title,{
+        body,
+        icon:'icons/icon-192.png',
+        badge:'icons/icon-192.png',
+        tag,
+        renotify:false,
+        data:{url:'./index.html'}
+      });
+    });
+    return true;
+  }
+
+  function alreadySent(tag){
+    return localStorage.getItem("notif_sent_"+tag) === new Date().toDateString();
+  }
+
+  function markSent(tag){
+    localStorage.setItem("notif_sent_"+tag, new Date().toDateString());
+  }
+
+  function getProgress(){
+    const normal = [...document.querySelectorAll('input[type="checkbox"]:not(.exercise)')];
+    const exercise = [...document.querySelectorAll('input.exercise')];
+    return {
+      done: normal.filter(x=>x.checked).length + exercise.filter(x=>x.checked).length,
+      total: normal.length + exercise.length
+    };
+  }
+
+  function sendOnce(tag,title,body){
+    if (alreadySent(tag)) return;
+    if (notification(title,body,tag)) markSent(tag);
+  }
+
+  function smartCheck(){
+    const key = todayKey();
+    const plan = plans[key];
+    const progress = getProgress();
+    const d = daysUntilTryout();
+
+    // Evento especial da peneira.
+    if (key === "20/10") {
+      sendOnce("tryout-today","🔴 É HOJE!","Boa sorte! Peneira do Red Bull Bragantino. Confia no seu treino. ⚽🔥");
+      return;
+    }
+
+    // Véspera.
+    if (key === "19/10") {
+      sendOnce("tryout-tomorrow","🚨 AMANHÃ É A PENEIRA!","Separe documentos, formulário, roupa e tudo que foi pedido no e-mail de confirmação.");
+      return;
+    }
+
+    // Contagem regressiva nos últimos 7 dias.
+    if (d >= 2 && d <= 7) {
+      sendOnce("countdown-"+d,"⏳ Faltam "+d+" dias!","A peneira está chegando. Mantém o foco e não esquece da recuperação.");
+    }
+
+    // Se o dia pede estudo.
+    if (plan && plan.startsWith("📚")) {
+      sendOnce("study-"+key,"📚 Hora dos estudos","Hoje é dia de estudos + recuperação. Faz seu checklist e depois descansa.");
+    }
+
+    // Treino/academia.
+    if (plan && (plan.startsWith("⚽") || plan.startsWith("🏋️"))) {
+      const type = plan.startsWith("⚽") ? "⚽ Treino de hoje" : "🏋️ Academia de hoje";
+      sendOnce("plan-"+key,type,plan+" Bora cumprir o checklist!");
+    }
+
+    // Se já passou uma parte do dia sem nenhum progresso, avisa.
+    const hour = new Date().getHours();
+    if (hour >= 17 && progress.done === 0) {
+      sendOnce("no-progress-"+key,"👀 Seu painel está esperando!","Você ainda não marcou nenhum checklist hoje. Bora fazer pelo menos o primeiro?");
+    }
+
+    // Quando tudo do checklist normal/exercícios estiver concluído.
+    if (progress.total > 0 && progress.done >= progress.total) {
+      sendOnce("complete-"+key,"🏆 Checklist completo!","Mandou muito! Seu bonequinho está feliz. Agora recupera e dorme bem.");
+    }
+  }
+
+  // Expõe para a página e para futuros botões/automação.
+  window.smartNotificationsCheck = smartCheck;
+
+  // Verifica ao abrir, ao voltar para o app e a cada 5 minutos.
+  smartCheck();
+  setInterval(smartCheck, 5*60*1000);
+  document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) smartCheck(); });
+  window.addEventListener("focus", smartCheck);
+
+  // Atualiza a checagem quando qualquer checklist muda.
+  document.addEventListener("change", e=>{
+    if(e.target && e.target.matches('input[type="checkbox"]')) {
+      setTimeout(smartCheck, 250);
+    }
+  });
+})();
+</script>
+
+</body></html>
